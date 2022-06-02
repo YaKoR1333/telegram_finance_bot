@@ -37,6 +37,11 @@ def delete(table: str, row_id: int) -> None:
     conn.commit()
 
 
+def update(table: str, column: str, new_budget: int) -> None:
+    cursor.execute(f'UPDATE {table} SET {column}={new_budget}')
+    conn.commit()
+
+
 def get_cursor():
     return cursor
 
