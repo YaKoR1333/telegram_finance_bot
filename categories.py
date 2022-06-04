@@ -7,7 +7,6 @@ class Category(NamedTuple):
     """Структура категории"""
     codename: str
     name: str
-    is_base_expense: bool
     aliases: List[str]
 
 
@@ -18,7 +17,7 @@ class Categories:
     def _load_categories(self) -> List[Category]:
         """Возвращает справочник категорий расходов из БД"""
         categories = db.fetch_all(
-            'category', 'codename name is_base_expense aliases'.split()
+            'category', 'codename name aliases'.split()
         )
         categories = self._fill_aliases(categories)
         return categories
@@ -36,7 +35,6 @@ class Categories:
             categories_result.append(Category(
                 codename=category['codename'],
                 name=category['name'],
-                is_base_expense=category['is_base_expense'],
                 aliases=aliases
             ))
         return categories_result
