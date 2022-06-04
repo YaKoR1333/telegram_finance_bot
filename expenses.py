@@ -46,8 +46,9 @@ def get_today_statistics() -> str:
     if not result[0]:
         return 'Сегодня вы не тратили деньги'
     all_today_expense = result[0]
-    cursor.execute('SELECT category_codename, SUM(amount) '
-                   'FROM expense '
+    cursor.execute('SELECT category.name, SUM(expense.amount) '
+                   'FROM expense LEFT JOIN category '
+                   'ON category.codename = expense.category_codename '
                    'WHERE DATE(created) = date("now", "localtime")'
                    'GROUP BY 1 '
                    'ORDER BY amount DESC ')
@@ -120,6 +121,11 @@ def delete_expenses(row_id: int) -> None:
     db.delete('expense', row_id)
 
 
+def update_budget(new_budget: int) -> None:
+    """Обновляет бюджет на месяц"""
+    db.update('budget', 'month_limit', new_budget)
+
+
 def _parse_message(raw_message: str) -> Message:
     """Парсит текст входящего сообщения о новом расходе"""
     regexp_result = re.match(r"([\d ]+) (.*)", raw_message)
@@ -145,8 +151,20 @@ def _get_now_formatted() -> str:
 
 
 def _get_budget_limit() -> int:
-    """Возвращает дневной лимит базовых трат"""
-    return db.fetch_all('budget', ['daily_limit'])[0]['daily_limit']
+    """Возвращает бюджет на месяц"""
+    return db.fetch_all('budget', ['month_limit'])[0]['month_limit']
+
+
+def get_balance() -> str:
+    budget_limit = _get_budget_limit()
+    now = _get_now_datetime()
+    first_day_of_month = f'{now.year:04d}-{now.month:02d}-01'
+    result = _expenses_period(first_day_of_month)
+    all_month_expenses = result[0]
+    if not result[0]:
+        return f'Ваш баланс {budget_limit} руб.'
+    else:
+        return f'Ваш баланс {budget_limit - all_month_expenses} руб.'
 
 
 def _expenses_period(first_day_period: str) -> list:
@@ -159,8 +177,9 @@ def _expenses_period(first_day_period: str) -> list:
 
 def _expenses_category_period(first_day_period: str) -> list:
     cursor = db.get_cursor()
-    cursor.execute(f'SELECT category_codename, SUM(amount) '
-                   f'FROM expense '
+    cursor.execute(f'SELECT category.name, SUM(expense.amount) '
+                   f'FROM expense LEFT JOIN category '
+                   f'ON category.codename = expense.category_codename '
                    f'WHERE DATE(created) >= "{first_day_period}"'
                    f'GROUP BY 1 '
                    f'ORDER BY amount DESC')

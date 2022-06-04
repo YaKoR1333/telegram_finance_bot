@@ -1,3 +1,4 @@
+"""Обёртки для работы с БД"""
 import os
 from typing import Dict, List, Tuple
 import sqlite3
@@ -38,7 +39,7 @@ def delete(table: str, row_id: int) -> None:
 
 
 def update(table: str, column: str, new_budget: int) -> None:
-    cursor.execute(f'UPDATE {table} SET {column}={new_budget}')
+    cursor.execute(f'UPDATE {table} SET {column} = {new_budget}')
     conn.commit()
 
 

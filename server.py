@@ -2,6 +2,9 @@
 import logging
 import os
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.dispatcher import FSMContext
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher.filters.state import State, StatesGroup
 import exceptions
 import expenses
 from categories import Categories
@@ -15,8 +18,13 @@ logging.basicConfig(level=logging.INFO)
 ACCESS_ID = os.getenv('TELEGRAM_ACCESS_ID')
 
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
 dp.middleware.setup(AccessMiddleware(ACCESS_ID))
+
+
+class Form(StatesGroup):
+    new_budget = State()
 
 
 @dp.message_handler(commands=['start', 'help'])
@@ -70,11 +78,39 @@ async def month_statistics(message: types.Message):
     await message.answer(answer_message)
 
 
+@dp.message_handler(commands=['change budget'])
+async def change_budget_input(message: types.Message):
+    await Form.new_budget.set()
+    await message.reply('Введите свой новый бюджет')
+
+
+@dp.message_handler(state=Form.new_budget)
+async def change_budget_output(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        try:
+            data['sum_budget'] = int(message.text)
+        except ValueError:
+            await message.answer(str(exceptions.NotCorrectMessage('Некорректное сообщние. Введите целое число')))
+            return
+    expenses.update_budget(data['sum_budget'])
+    answer_message = f'Ваш новый бюджет {data["sum_budget"]}'
+    await message.answer(answer_message)
+    await state.finish()
+
+
 @dp.message_handler(commands=['year'])
 async def year_statistics(message: types.Message):
     """Статистика трат за год"""
     answer_message = expenses.get_year_statistics()
     await message.answer(answer_message)
+
+
+@dp.message_handler(commands=['balance'])
+async def show_balance(message: types.Message):
+    """Показывает текущий баланс"""
+    answer_message = expenses.get_balance()
+    await message.answer(answer_message)
+
 
 
 @dp.message_handler(commands=['expenses'])
@@ -101,6 +137,15 @@ async def add_expense(message: types.Message):
     elif message.text == 'Статистика':
         await bot.send_message(message.from_user.id, 'Статистика', reply_markup=keyboards.statisticsMenu)
 
+    elif message.text == 'Бюджет':
+        await bot.send_message(message.from_user.id, 'Бюджет', reply_markup=keyboards.budgetMenu)
+
+    elif message.text == 'Баланс':
+        await show_balance(message)
+
+    elif message.text == 'Изменить бюджет':
+        await change_budget_input(message)
+
     elif message.text == 'Последние расходы':
         await list_expenses(message)
 
@@ -126,7 +171,8 @@ async def add_expense(message: types.Message):
             return
         answer_message = (
             f'Добавлены траты {expense.amount} руб на {expense.category_name}.\n\n'
-            f'{expenses.get_today_statistics()}')
+            f'{expenses.get_today_statistics()}\n\n'
+            f'{expenses.get_balance()}')
         await message.answer(answer_message)
 
 if __name__ == '__main__':
