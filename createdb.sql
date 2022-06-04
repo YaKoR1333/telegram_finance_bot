@@ -1,12 +1,11 @@
 CREATE TABLE budget(
     codename VARCHAR(255) PRIMARY KEY,
-    daily_limit INTEGER
+    month_limit INTEGER
 );
 
 CREATE TABLE category(
     codename VARCHAR(255) PRIMARY KEY,
     name VARCHAR(255),
-    is_base_expense bolean,
     aliases text
 );
 
@@ -19,18 +18,24 @@ CREATE TABLE expense(
     FOREIGN KEY(category_codename) REFERENCES category(codename)
 );
 
-INSERT INTO category (codename, name, is_base_expense, aliases)
+INSERT INTO category (codename, name, aliases)
 VALUES
-    ("products", "продукты", true, "еда"),
-    ("coffee", "кофе", true, ""),
-    ("dinner", "обед", true, "столовая, ланч, бизнес-ланч, бизнес ланч"),
-    ("cafe", "кафе", true, "ресторан, рест, мак, макдональдс, макдак, kfc, ilpatio, il patio"),
-    ("transport", "общ. транспорт", false, "метро, автобус, metro"),
-    ("taxi", "такси", false, "яндекс такси, yandex taxi"),
-    ("phone", "телефон", false, "теле2, связь"),
-    ("books", "книги", false, "литература, литра, лит-ра"),
-    ("internet", "интернет", false, "инет, inet"),
-    ("subscriptions", "подписки", false, "подписка"),
-    ("other", "прочее", true, "");
+    ("products", "продукты", "еда, пятёрочка, пятерочка, магнит, спар"),
+    ("health", "здоровье", "больница, зубной"),
+    ("Clothing", "одежда", "шмотки, обувь, тапки, шопинг"),
+    ("Pets", "домашние животные", "корм, ветеринарка, коты"),
+    ("cafe", "кафе", "ресторан, рест, мак, макдональдс, макдак, kfc, додо, пицца, бургер-кинг, суши"),
+    ("transport", "общ. транспорт", "метро, автобус, metro, троллейбус, маршрутка"),
+    ("taxi", "такси", "яндекс такси, yandex taxi"),
+    ("phone", "телефон", "теле2, связь, билайн, мтс, йота"),
+    ("books", "книги", "литература, литра, лит-ра"),
+    ("internet", "интернет", "инет, inet"),
+    ("subscriptions", "подписки", "подписка"),
+    ("Apartment", "Кварплата", "ЖКХ, газ, электричество, вода"),
+    ("Lunch", "обед", "столовая, ланч, бизнес ланч, бизнес-ланч"),
+    ("Medications", "Лекарства", "аптека, таблетки"),
+    ("Entertainment", "Развлечения", "кино, театр, квест, самокаты"),
+    ("Poker", "покер", ""),
+    ("other", "прочее", "");
 
-INSERT INTO budget(codename, daily_limit) values ('base', 500);
+INSERT INTO budget(codename, month_limit) values ('base', 10000);
