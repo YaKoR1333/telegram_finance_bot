@@ -1,5 +1,6 @@
 """Работа с категориями расходов"""
 from typing import Dict, List, NamedTuple
+
 import db
 
 

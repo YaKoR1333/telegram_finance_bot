@@ -1,10 +1,12 @@
 "Сервер ТГ бота"
 import logging
 import os
+
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
+
 import exceptions
 import expenses
 from categories import Categories
@@ -110,7 +112,6 @@ async def show_balance(message: types.Message):
     """Показывает текущий баланс"""
     answer_message = expenses.get_balance()
     await message.answer(answer_message)
-
 
 
 @dp.message_handler(commands=['expenses'])
